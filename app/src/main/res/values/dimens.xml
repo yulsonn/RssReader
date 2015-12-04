@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--Toolbar-->
+    <dimen name="toolbar_elevation">4dp</dimen>
+
+    <!--FAB-->
+    <dimen name="fab_margin">16dp</dimen>
+
+    <!--Card View-->
+    <dimen name="card_height">85dp</dimen>
+    <dimen name="card_margin">2dp</dimen>
+    <dimen name="card_corner_radius">2dp</dimen>
+
+    <!--Add feed dialog-->
+    <dimen name="dialog_padding_vertical">24dp</dimen>
+    <dimen name="dialog_padding_horizontal">24dp</dimen>
+    <dimen name="text_padding">16dp</dimen>
+    <dimen name="action_btn_height">36dp</dimen>
+    <dimen name="btn_elevation">5dp</dimen>
+    <dimen name="add_expense_padding_right">110dp</dimen>
+    <dimen name="add_expense_xlarge_margins">40dp</dimen>
+    <dimen name="btn_xlarge_height">80dp</dimen>
+
+    <dimen name="text_normal_size">16sp</dimen>
+    <dimen name="text_large_size">20sp</dimen>
+
+    <dimen name="default_margin">8dp</dimen>
+    <dimen name="large_margin">16dp</dimen>
+
+
+
+</resources>

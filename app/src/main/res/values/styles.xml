@@ -1,0 +1,32 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorControlNormal">@color/colorPrimary</item>
+    </style>
+
+    <style name="AppTheme.DialogMetrics">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingLeft">@dimen/dialog_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/dialog_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/dialog_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/dialog_padding_vertical</item>
+    </style>
+
+    <style name="DialogText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily" tools:targetApi="jelly_bean">Roboto Medium</item>
+    </style>
+
+    <style name="AlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/colorPrimaryDark</item>
+        <item name="background">@color/colorBackground</item>
+    </style>
+
+</resources>

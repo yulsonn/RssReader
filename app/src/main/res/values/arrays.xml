@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="rss_titles">
+        <item>Kinopoisk</item>
+        <item>Vogella</item>
+        <item>Яндекс.Новости: Технологии</item>
+    </string-array>
+
+    <string-array name="rss_urls">
+        <item>http://st.kp.yandex.net/rss/news.rss</item>
+        <item>http://www.vogella.com/article.rss</item>
+        <item>https://news.yandex.ru/computers.rss</item>
+    </string-array>
+</resources>
