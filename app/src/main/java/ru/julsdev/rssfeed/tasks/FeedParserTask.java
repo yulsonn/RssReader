@@ -18,14 +18,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import ru.julsdev.rssfeed.constants.ActionConstants;
 import ru.julsdev.rssfeed.database.RssContract;
 import ru.julsdev.rssfeed.models.PostModel;
-import ru.julsdev.rssfeed.ui.activities.MainActivity;
 import ru.julsdev.rssfeed.utils.DataLoadUtil;
 import ru.julsdev.rssfeed.utils.NetworkConnectionChecker;
 
 
-public class FeedParserTask extends AsyncTask<Void, Void, Void> {
+public class FeedParserTask extends AsyncTask<Void, Void, Void> implements ActionConstants {
 
     public static final String CHANNEL = "channel";
     public static final String ITEM = "item";
@@ -159,19 +159,19 @@ public class FeedParserTask extends AsyncTask<Void, Void, Void> {
 
     void swipeRefreshStart() {
         Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction(MainActivity.SWIPE_START_ACTION);
+        broadcastIntent.setAction(SWIPE_START_ACTION);
         context.sendBroadcast(broadcastIntent);
     }
 
     void swipeRefreshStop() {
         Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction(MainActivity.SWIPE_STOP_ACTION);
+        broadcastIntent.setAction(SWIPE_STOP_ACTION);
         context.sendBroadcast(broadcastIntent);
     }
 
     void noInternetMsg() {
         Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction(MainActivity.NO_INTERNET);
+        broadcastIntent.setAction(NO_INTERNET);
         context.sendBroadcast(broadcastIntent);
     }
 

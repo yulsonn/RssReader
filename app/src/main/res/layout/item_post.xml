@@ -6,7 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="@dimen/card_margin"
-    card_view:cardBackgroundColor="@color/white">
+    card_view:cardCornerRadius="2dp"
+    card_view:cardBackgroundColor="@color/white"
+    card_view:contentPadding="@dimen/padding_default"
+    card_view:cardUseCompatPadding="false"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,26 +22,34 @@
             android:id="@+id/post_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginLeft="8dp"
             android:text="Title"
-            android:textStyle="bold"/>
+            android:textSize="@dimen/text_normal_size"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimaryDark"/>
 
         <TextView
             android:id="@+id/post_desc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginLeft="8dp"
             android:text="Description"
-            android:maxLines="5"/>
+            android:layout_marginTop="@dimen/margin_small"
+            android:textSize="@dimen/text_normal_size"
+            android:maxLines="5"
+            android:ellipsize="end"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@android:color/darker_gray"
+            android:layout_marginTop="@dimen/margin_small"
+            android:layout_marginBottom="@dimen/margin_small"/>
 
         <TextView
             android:id="@+id/post_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginLeft="8dp"
+            android:textSize="@dimen/text_normal_size"
+            android:textStyle="italic"
             android:text="Date"/>
     </LinearLayout>
 

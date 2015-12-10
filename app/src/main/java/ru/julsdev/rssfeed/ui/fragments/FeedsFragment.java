@@ -14,12 +14,15 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Editable;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -30,21 +33,44 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.res.StringRes;
 
 import ru.julsdev.rssfeed.R;
 import ru.julsdev.rssfeed.adapters.FeedsAdapter;
+import ru.julsdev.rssfeed.constants.BundleArgConstants;
 import ru.julsdev.rssfeed.database.RssContract;
 import ru.julsdev.rssfeed.tasks.FeedParserTask;
 import ru.julsdev.rssfeed.utils.InputValidationUtil;
 
 @EFragment(R.layout.fragment_feeds)
-public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
+public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, BundleArgConstants{
 
     @ViewById(R.id.feed_fab)
     FloatingActionButton fab;
 
     @ViewById(R.id.swipe_refresh)
     SwipeRefreshLayout swipeRefreshLayout;
+
+    @StringRes(R.string.fragment_feeds_title)
+    String title;
+
+    @StringRes(R.string.msg_add_feed_success)
+    String msgFeedAddSuccess;
+
+    @StringRes(R.string.msg_add_feed_fail)
+    String msgFeedAddFail;
+
+    @StringRes(R.string.msg_remove_feed_success)
+    String msgFeedRemoveSuccess;
+
+    @StringRes(R.string.msg_remove_feed_fail)
+    String msgFeedRemoveFail;
+
+    @StringRes(R.string.hint_name)
+    String hintName;
+
+    @StringRes(R.string.hint_address)
+    String hintAddress;
 
     private RecyclerView recyclerView;
     private FeedsAdapter adapter;
@@ -89,8 +115,8 @@ public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallb
         final Editable name = etName.getText();
         final Editable url = etUrl.getText();
 
-        feedNameWrapper.setHint("Name");
-        feedUrlWrapper.setHint("Address");
+        feedNameWrapper.setHint(hintName);
+        feedUrlWrapper.setHint(hintAddress);
 
         Button okButton = (Button) dialog.findViewById(R.id.btn_ok);
         Button cancelButton = (Button) dialog.findViewById(R.id.btn_cancel);
@@ -116,12 +142,12 @@ public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallb
                         }
 
                         if (res > -1) {
-                            Toast.makeText(getContext(), "Success", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), msgFeedAddSuccess, Toast.LENGTH_SHORT).show();
                             new FeedParserTask(url.toString(), res, getContext()).execute();
                             dialog.dismiss();
                         }
                     } else {
-                        Toast.makeText(getContext(), "Fail", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), msgFeedAddFail, Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -141,13 +167,22 @@ public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_feeds, container, false);
-        getActivity().setTitle("Feeds");
-
+        getActivity().setTitle(title);
+        setHasOptionsMenu(true);
         recyclerView = (RecyclerView) rootView.findViewById(R.id.feeds_recycler);
 
         initRecyclerView();
 
         return rootView;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     private void initRecyclerView() {
@@ -193,9 +228,9 @@ public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallb
                 }
 
                 if (cnt > 0) {
-                    Toast.makeText(getContext(), "Feed removed successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), msgFeedRemoveSuccess, Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(), "Removing failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), msgFeedRemoveFail, Toast.LENGTH_SHORT).show();
                 }
             }
         };
@@ -206,9 +241,12 @@ public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallb
 
     private void openFeedPosts(int position) {
         long id = adapter.getItemId(position);
+        Cursor cursor = adapter.getItem(position);
+        String title = cursor.getString(cursor.getColumnIndex(RssContract.FeedsEntry.COLUMN_NAME));
         PostsFragment postsFragment = new PostsFragment_();
         Bundle bundle = new Bundle();
-        bundle.putLong("ARG_ID", id);
+        bundle.putLong(ARG_ID, id);
+        bundle.putString(ARG_TITLE, title);
         postsFragment.setArguments(bundle);
 
         FragmentManager fragmentManager = ((AppCompatActivity) getContext()).getSupportFragmentManager();
