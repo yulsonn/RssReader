@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dbHelper = new RssDbHelper(this);
-        DataLoadUtil.loadInitialData(dbHelper, this);
+        DataLoadUtil.loadInitialData(this);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new FeedsFragment_()).commit();

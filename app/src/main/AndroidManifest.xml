@@ -20,6 +20,12 @@
             </intent-filter>
         </activity>
 
+        <provider
+            android:authorities="@string/content_authority"
+            android:name=".database.RssProvider"
+            android:exported="false"
+            android:syncable="true"/>
+
     </application>
 
 </manifest>
