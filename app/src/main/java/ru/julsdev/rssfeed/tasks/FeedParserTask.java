@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.julsdev.rssfeed.database.RssContract;
-import ru.julsdev.rssfeed.database.RssDbHelper;
 import ru.julsdev.rssfeed.models.PostModel;
 import ru.julsdev.rssfeed.ui.activities.MainActivity;
+import ru.julsdev.rssfeed.utils.DataLoadUtil;
 import ru.julsdev.rssfeed.utils.NetworkConnectionChecker;
 
 
@@ -41,7 +41,6 @@ public class FeedParserTask extends AsyncTask<Void, Void, Void> {
     private String urlString;
     private int feedId;
     private Context context;
-    private RssDbHelper dbHelper;
 
     public FeedParserTask(Context context) {
         this.context = context;
@@ -62,8 +61,6 @@ public class FeedParserTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         if (NetworkConnectionChecker.isConnected(context)) {
-
-            dbHelper = new RssDbHelper(context);
             if (urlString != null) {
                 parsePostsForFeed();
             } else {
@@ -94,10 +91,10 @@ public class FeedParserTask extends AsyncTask<Void, Void, Void> {
     }
 
     public void parsePostsForAllFeeds() {
-        Cursor cursor = dbHelper.getAllFeeds();
-        if (cursor.getCount() != 0) {
+        Cursor cursor = context.getContentResolver().query(RssContract.FeedsEntry.CONTENT_URI, null, null, null, null);
+        if (cursor != null && cursor.getCount() != 0) {
             while (cursor.moveToNext()) {
-                feedId = cursor.getInt(cursor.getColumnIndex(RssContract.FeedsEntry.COLUMN_ID));
+                feedId = cursor.getInt(cursor.getColumnIndex(RssContract.FeedsEntry._ID));
                 urlString = cursor.getString(cursor.getColumnIndex(RssContract.FeedsEntry.COLUMN_URL));
                 parsePostsForFeed();
             }
@@ -154,22 +151,10 @@ public class FeedParserTask extends AsyncTask<Void, Void, Void> {
             }
 
         if (!postsList.isEmpty()) {
-            saveToDb(postsList);
+            DataLoadUtil.insertPosts(context, postsList);
         }
 
         return postsList;
-    }
-
-    private void saveToDb(List<PostModel> posts) {
-        Cursor cursor = dbHelper.getPostsByFeed(feedId);
-        if (cursor.getCount() > 0) {
-            dbHelper.deletePostsByFeed(feedId);
-            cursor.close();
-        }
-
-        for (PostModel post : posts) {
-            dbHelper.insertPost(post);
-        }
     }
 
     void swipeRefreshStart() {

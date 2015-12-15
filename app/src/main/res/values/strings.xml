@@ -3,4 +3,6 @@
 
     <string name="add_feed_btn_cancel_txt">Cancel</string>
     <string name="add_feed_btn_ok_txt">Ok</string>
+
+    <string name="content_authority">ru.julsdev.rssfeed</string>
 </resources>

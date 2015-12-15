@@ -75,7 +75,6 @@ public abstract class CursorRecyclerViewAdapter<VH extends RecyclerView.ViewHold
         return oldCursor;
     }
 
-
     private class NotifyingDataSetObserver extends DataSetObserver {
         @Override
         public void onChanged() {

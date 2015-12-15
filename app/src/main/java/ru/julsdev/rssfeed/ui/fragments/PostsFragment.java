@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,86 +15,63 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
-import org.androidannotations.annotations.ViewById;
 
 import ru.julsdev.rssfeed.R;
 import ru.julsdev.rssfeed.adapters.PostsAdapter;
 import ru.julsdev.rssfeed.database.RssContract;
-import ru.julsdev.rssfeed.database.RssDbHelper;
 
 @EFragment(R.layout.fragment_posts)
-public class PostsFragment extends Fragment {
+public class PostsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    @ViewById(R.id.posts_recycler)
-    RecyclerView recyclerView;
-
-    private RssDbHelper dbHelper;
+    private RecyclerView recyclerView;
     private PostsAdapter adapter;
-    private int feedId;
 
-    @AfterViews
-    void ready() {
-        initRecyclerView();
-    }
+    private int feedId = -1;
+
+    private static final int POSTS_LOADER = 1;
+
+    private static final String[] POSTS_COLUMNS = {
+            RssContract.PostsEntry._ID,
+            RssContract.PostsEntry.COLUMN_TITLE,
+            RssContract.PostsEntry.COLUMN_DESCRIPTION,
+            RssContract.PostsEntry.COLUMN_DATE,
+    };
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_posts, container, false);
+
         getActivity().setTitle("Posts");
-        dbHelper = new RssDbHelper(getContext());
         feedId = (int)getArguments().getLong("ARG_ID");
 
-        return super.onCreateView(inflater, container, savedInstanceState);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.posts_recycler);
+
+        initRecyclerView();
+
+        return rootView;
     }
 
     private void initRecyclerView() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), 1, false);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(linearLayoutManager);
+        adapter = new PostsAdapter(null, new PostsAdapter.ViewHolder.ClickListener() {
+            @Override
+            public void onItemClicked(int position) {
+               openPostDetails(position);
+            }
+        });
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        loadData();
-    }
-
-    private void loadData() {
-        getLoaderManager().restartLoader(1, null, new LoaderManager.LoaderCallbacks<Cursor>() {
-
-            @Override
-            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-                final AsyncTaskLoader<Cursor> loader = new AsyncTaskLoader<Cursor>(getActivity()) {
-
-                    @Override
-                    public Cursor loadInBackground() {
-                        return dbHelper.getPostsByFeed(feedId);
-                    }
-                };
-                loader.forceLoad();
-                return loader;
-            }
-
-            @Override
-            public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-                adapter = new PostsAdapter(data, new PostsAdapter.ViewHolder.ClickListener() {
-                    @Override
-                    public void onItemClicked(int position) {
-                        openPostDetails(position);
-                    }
-                });
-                adapter.notifyDataSetChanged();
-                recyclerView.setAdapter(adapter);
-            }
-
-            @Override
-            public void onLoaderReset(Loader<Cursor> loader) {
-
-            }
-        });
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(POSTS_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
     }
 
     private void openPostDetails(int position) {
@@ -117,5 +94,34 @@ public class PostsFragment extends Fragment {
         dialog.show();
         dialog.getWindow().setAttributes(lp);
 
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (feedId == -1) {
+            Toast.makeText(getActivity(), "Posts not found...", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+
+        String sortOrder = RssContract.PostsEntry._ID + " DESC";
+        String selection = RssContract.PostsEntry.COLUMN_FEED_ID + " = ?";
+        String[] selectionArgs  = new String[]{String.valueOf(feedId)};
+
+        return new CursorLoader(getActivity(),
+                RssContract.PostsEntry.CONTENT_URI,
+                POSTS_COLUMNS,
+                selection,
+                selectionArgs,
+                sortOrder);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        adapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
     }
 }

@@ -1,7 +1,9 @@
 package ru.julsdev.rssfeed.ui.fragments;
 
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -9,7 +11,7 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -31,18 +33,12 @@ import org.androidannotations.annotations.ViewById;
 
 import ru.julsdev.rssfeed.R;
 import ru.julsdev.rssfeed.adapters.FeedsAdapter;
-import ru.julsdev.rssfeed.database.RssDbHelper;
-import ru.julsdev.rssfeed.models.FeedModel;
+import ru.julsdev.rssfeed.database.RssContract;
 import ru.julsdev.rssfeed.tasks.FeedParserTask;
 import ru.julsdev.rssfeed.utils.InputValidationUtil;
 
 @EFragment(R.layout.fragment_feeds)
-public class FeedsFragment extends Fragment {
-
-    private static final String TAG = FeedsFragment.class.getSimpleName();
-
-    @ViewById(R.id.feeds_recycler)
-    RecyclerView recyclerView;
+public class FeedsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
     @ViewById(R.id.feed_fab)
     FloatingActionButton fab;
@@ -50,8 +46,16 @@ public class FeedsFragment extends Fragment {
     @ViewById(R.id.swipe_refresh)
     SwipeRefreshLayout swipeRefreshLayout;
 
-    RssDbHelper dbHelper;
-    FeedsAdapter adapter;
+    private RecyclerView recyclerView;
+    private FeedsAdapter adapter;
+
+    private static final int FEEDS_LOADER = 0;
+
+    private static final String[] FEEDS_COLUMNS = {
+            RssContract.FeedsEntry._ID,
+            RssContract.FeedsEntry.COLUMN_NAME,
+            RssContract.FeedsEntry.COLUMN_URL
+    };
 
     public SwipeRefreshLayout getSwipeRefreshLayout() {
         return swipeRefreshLayout;
@@ -68,11 +72,6 @@ public class FeedsFragment extends Fragment {
             }
         });
 
-        initRecyclerView();
-    }
-
-    public void stopSwipe() {
-        swipeRefreshLayout.setEnabled(false);
     }
 
     @Click(R.id.feed_fab)
@@ -100,12 +99,27 @@ public class FeedsFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (InputValidationUtil.validateFeedFields(name.toString(), feedNameWrapper, url.toString(), feedUrlWrapper)) {
-                    long res = adapter.insertItem(new FeedModel(name.toString(), url.toString()), dbHelper);
-                    if (res > -1) {
-                        Toast.makeText(getContext(), "Success", Toast.LENGTH_SHORT).show();
-                        adapter.swapCursor(dbHelper.getAllFeeds());
-                        new FeedParserTask(url.toString(),(int)res, getContext()).execute();
-                        dialog.dismiss();
+
+                    ContentValues cv = new ContentValues();
+                    cv.put(RssContract.FeedsEntry.COLUMN_NAME, name.toString());
+                    cv.put(RssContract.FeedsEntry.COLUMN_URL, url.toString());
+
+                    Uri newFeed = getContext().getContentResolver().insert(RssContract.FeedsEntry.CONTENT_URI, cv);
+
+                    if (newFeed != null) {
+                        Cursor cursor = getContext().getContentResolver().query(newFeed, new String[]{RssContract.FeedsEntry._ID}, null, null, null);
+
+                        int res = -1;
+                        if (cursor != null && cursor.moveToFirst()) {
+                            res = Integer.parseInt(cursor.getString(cursor.getColumnIndex(RssContract.FeedsEntry._ID)));
+                            cursor.close();
+                        }
+
+                        if (res > -1) {
+                            Toast.makeText(getContext(), "Success", Toast.LENGTH_SHORT).show();
+                            new FeedParserTask(url.toString(), res, getContext()).execute();
+                            dialog.dismiss();
+                        }
                     } else {
                         Toast.makeText(getContext(), "Fail", Toast.LENGTH_SHORT).show();
                     }
@@ -126,24 +140,38 @@ public class FeedsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+        View rootView = inflater.inflate(R.layout.fragment_feeds, container, false);
         getActivity().setTitle("Feeds");
-        dbHelper = new RssDbHelper(getContext());
 
-        return super.onCreateView(inflater, container, savedInstanceState);
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.feeds_recycler);
+
+        initRecyclerView();
+
+        return rootView;
     }
 
     private void initRecyclerView() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), 1, false);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(linearLayoutManager);
+        adapter = new FeedsAdapter(null, new FeedsAdapter.ViewHolder.ClickListener() {
+            @Override
+            public void onItemClicked(int position) {
+                openFeedPosts(position);
+            }
+        });
+        recyclerView.setAdapter(adapter);
+    }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(FEEDS_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        loadData();
 
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
@@ -153,10 +181,19 @@ public class FeedsFragment extends Fragment {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                int cnt = adapter.removeItem(viewHolder.getAdapterPosition(), dbHelper);
+                int cnt = 0;
+                int id = -1;
+                Cursor cursor = adapter.getItem(viewHolder.getAdapterPosition());
+                if (cursor != null) {
+                    id = Integer.parseInt(cursor.getString(cursor.getColumnIndex(RssContract.FeedsEntry._ID)));
+                }
+
+                if (id > -1 ) {
+                    cnt = getContext().getContentResolver().delete(RssContract.FeedsEntry.buildFeedByIdUri(id), null, null);
+                }
+
                 if (cnt > 0) {
                     Toast.makeText(getContext(), "Feed removed successfully", Toast.LENGTH_SHORT).show();
-                    adapter.swapCursor(dbHelper.getAllFeeds());
                 } else {
                     Toast.makeText(getContext(), "Removing failed", Toast.LENGTH_SHORT).show();
                 }
@@ -165,41 +202,6 @@ public class FeedsFragment extends Fragment {
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
-    }
-
-    private void loadData() {
-        getLoaderManager().restartLoader(1, null, new LoaderManager.LoaderCallbacks<Cursor>() {
-
-            @Override
-            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-                final AsyncTaskLoader<Cursor> loader = new AsyncTaskLoader<Cursor>(getActivity()) {
-
-                    @Override
-                    public Cursor loadInBackground() {
-                        return dbHelper.getAllFeeds();
-                    }
-                };
-                loader.forceLoad();
-                return loader;
-            }
-
-            @Override
-            public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-                adapter = new FeedsAdapter(data, new FeedsAdapter.ViewHolder.ClickListener() {
-                    @Override
-                    public void onItemClicked(int position) {
-                        openFeedPosts(position);
-                    }
-                });
-                adapter.notifyDataSetChanged();
-                recyclerView.setAdapter(adapter);
-            }
-
-            @Override
-            public void onLoaderReset(Loader<Cursor> loader) {
-
-            }
-        });
     }
 
     private void openFeedPosts(int position) {
@@ -211,5 +213,28 @@ public class FeedsFragment extends Fragment {
 
         FragmentManager fragmentManager = ((AppCompatActivity) getContext()).getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.fragment_container, postsFragment).addToBackStack(null).commit();
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String sortOrder = RssContract.FeedsEntry._ID + " DESC";
+
+        return new CursorLoader(getActivity(),
+                RssContract.FeedsEntry.CONTENT_URI,
+                FEEDS_COLUMNS,
+                null,
+                null,
+                sortOrder);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        adapter.swapCursor(data);
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
     }
 }
