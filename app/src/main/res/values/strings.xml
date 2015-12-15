@@ -1,8 +1,25 @@
 <resources>
     <string name="app_name">RssFeed</string>
 
-    <string name="add_feed_btn_cancel_txt">Cancel</string>
-    <string name="add_feed_btn_ok_txt">Ok</string>
-
     <string name="content_authority">ru.julsdev.rssfeed</string>
+
+    <!--Dialog buttons-->
+    <string name="add_feed_btn_cancel_txt">Cancel</string>
+    <string name="add_feed_btn_ok_txt">OK</string>
+
+    <!--Fragment titles-->
+    <string name="fragment_feeds_title">Feeds</string>
+    <string name="fragment_posts_title">Posts</string>
+
+    <!--Messages-->
+    <string name="msg_error_no_internet">Нет подключения к интернету…</string>
+    <string name="msg_add_feed_success">Feed successfully added</string>
+    <string name="msg_add_feed_fail">Feed adding failed</string>
+    <string name="msg_remove_feed_success">Feed removed successfully</string>
+    <string name="msg_remove_feed_fail">Feed removing failed</string>
+    <string name="msg_posts_not_found">Posts not found…</string>
+
+    <!--Hint-->
+    <string name="hint_name">Name</string>
+    <string name="hint_address">Address</string>
 </resources>

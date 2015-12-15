@@ -3,7 +3,6 @@ package ru.julsdev.rssfeed.ui.activities;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -14,27 +13,19 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.Receiver;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.res.StringRes;
 
 import ru.julsdev.rssfeed.R;
-import ru.julsdev.rssfeed.database.RssDbHelper;
+import ru.julsdev.rssfeed.constants.ActionConstants;
 import ru.julsdev.rssfeed.ui.fragments.FeedsFragment;
 import ru.julsdev.rssfeed.ui.fragments.FeedsFragment_;
 import ru.julsdev.rssfeed.utils.DataLoadUtil;
 
 @EActivity(R.layout.activity_main)
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ActionConstants {
 
-    public static final String SWIPE_START_ACTION = "start_swipe_refresh";
-    public static final String SWIPE_STOP_ACTION = "stop_swipe_refresh";
-    public static final String NO_INTERNET = "no_internet";
-
-    private static final String TAG = MainActivity.class.getSimpleName();
-
-    public RssDbHelper getDbHelper() {
-        return dbHelper;
-    }
-
-    private RssDbHelper dbHelper;
+    @StringRes(R.string.msg_error_no_internet)
+    String msgErrorNoInternet;
 
     @ViewById(R.id.fragment_container)
     View container;
@@ -65,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Receiver(actions = NO_INTERNET)
     protected void noInternetMsg() {
-        Toast.makeText(MainActivity.this, "Нет подключения к интернету...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, msgErrorNoInternet, Toast.LENGTH_SHORT).show();
     }
 
     void swipeRefreshVisible(boolean isVisible) {
@@ -80,16 +71,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initToolbar() {
         setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dbHelper = new RssDbHelper(this);
         DataLoadUtil.loadInitialData(this);
 
         if (savedInstanceState == null) {

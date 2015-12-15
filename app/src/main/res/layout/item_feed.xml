@@ -7,7 +7,10 @@
     android:layout_height="@dimen/card_height"
     android:layout_margin="@dimen/card_margin"
     card_view:cardBackgroundColor="@color/white"
-    card_view:cardUseCompatPadding="false">
+    card_view:contentPadding="@dimen/padding_small"
+    card_view:cardUseCompatPadding="false"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,15 +22,16 @@
             android:id="@+id/feed_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_margin"
             android:text="Name"
+            android:textSize="@dimen/text_normal_size"
             android:textStyle="bold"/>
 
         <TextView
             android:id="@+id/feed_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_margin"
+            android:layout_marginTop="@dimen/margin_small"
+            android:textSize="@dimen/text_normal_size"
             android:text="Url"/>
 
     </LinearLayout>

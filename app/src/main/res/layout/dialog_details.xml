@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
-    android:padding="@dimen/default_margin">
+    android:padding="@dimen/margin_default">
 
     <TextView
         android:id="@+id/details_title"
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="@dimen/text_normal_size"
-        android:layout_marginTop="@dimen/large_margin"/>
+        android:layout_marginTop="@dimen/margin_large"/>
 
 
 </LinearLayout>

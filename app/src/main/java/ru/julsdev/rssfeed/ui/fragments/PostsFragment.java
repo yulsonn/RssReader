@@ -8,9 +8,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -18,13 +22,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.androidannotations.annotations.EFragment;
+import org.androidannotations.annotations.res.StringRes;
 
 import ru.julsdev.rssfeed.R;
 import ru.julsdev.rssfeed.adapters.PostsAdapter;
+import ru.julsdev.rssfeed.constants.BundleArgConstants;
 import ru.julsdev.rssfeed.database.RssContract;
 
 @EFragment(R.layout.fragment_posts)
-public class PostsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class PostsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, BundleArgConstants {
+
+    @StringRes(R.string.fragment_posts_title)
+    String defaultTitle;
+
+    @StringRes(R.string.msg_posts_not_found)
+    String msgPostsNotFound;
 
     private RecyclerView recyclerView;
     private PostsAdapter adapter;
@@ -44,15 +56,31 @@ public class PostsFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_posts, container, false);
+        setHasOptionsMenu(true);
 
-        getActivity().setTitle("Posts");
-        feedId = (int)getArguments().getLong("ARG_ID");
+        feedId = (int)getArguments().getLong(ARG_ID);
+        String title = getArguments().getString(ARG_TITLE);
+
+        if (title != null) {
+            getActivity().setTitle(title);
+        } else {
+            getActivity().setTitle(defaultTitle);
+        }
 
         recyclerView = (RecyclerView) rootView.findViewById(R.id.posts_recycler);
 
         initRecyclerView();
 
         return rootView;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        ActionBar actionBar = ((AppCompatActivity)getActivity()).getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     private void initRecyclerView() {
@@ -99,7 +127,7 @@ public class PostsFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (feedId == -1) {
-            Toast.makeText(getActivity(), "Posts not found...", Toast.LENGTH_SHORT).show();
+            noPostsMessage();
             return null;
         }
 
@@ -117,11 +145,18 @@ public class PostsFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data.getCount() == 0) {
+            noPostsMessage();
+        }
         adapter.swapCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         adapter.swapCursor(null);
+    }
+
+    private void noPostsMessage() {
+        Toast.makeText(getActivity(), msgPostsNotFound, Toast.LENGTH_SHORT).show();
     }
 }
